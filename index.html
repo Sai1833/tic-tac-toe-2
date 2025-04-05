@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tic-Tac-Toe Deluxe</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      :root {
+        --bg-light: #e6e6e6;
+        --bg-dark: #424242;
+        --tile-light: #ffffff;
+        --tile-dark: #2a2a2a;
+        --shadow-light: rgba(0, 0, 0, 0.1);
+        --shadow-dark: rgba(255, 255, 255, 0.05);
+        --text-light: #000;
+        --text-dark: #fff;
+        --x-color: #ff5f57;
+        --o-color: #57a0ff;
+        --transition: 0.3s ease-in-out;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        font-size: 16px;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: var(--bg-light);
+        color: var(--text-light);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        transition: background var(--transition), color var(--transition);
+        overflow-x: hidden;
+        padding: 20px;
+      }
+
+      body.dark {
+        background: var(--bg-dark);
+        color: var(--text-dark);
+      }
+
+      .container {
+        width: 100%;
+        max-width: 480px;
+        padding: 20px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(4px);
+        box-shadow: 0 4px 10px var(--shadow-light);
+      }
+
+      body.dark .container {
+        background: rgba(34, 34, 34, 0.25);
+        box-shadow: 0 4px 20px var(--shadow-dark);
+      }
+
+      .controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .right-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .btn {
+        padding: 10px 15px;
+        border-radius: 30px;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        background: linear-gradient(145deg, #e6e6e6, #ffffff);
+        box-shadow: 2px 2px 6px #c1c1c1, -2px -2px 6px #ffffff;
+        transition: transform var(--transition), box-shadow var(--transition);
+      }
+
+      body.dark .btn {
+        background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+        box-shadow: 2px 2px 6px #111, -2px -2px 6px #2a2a2a;
+        color: white;
+      }
+
+      .btn:hover {
+        transform: scale(1.05);
+      }
+
+      .icon-btn {
+        background: none;
+        border: none;
+        font-size: 1.3rem;
+        cursor: pointer;
+        color: inherit;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .status {
+        text-align: center;
+        margin-bottom: 10px;
+        font-size: 1.2rem;
+      }
+
+      .score {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .board {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4vw;
+        aspect-ratio: 1 / 1;
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto 20px;
+      }
+
+      .tile {
+        aspect-ratio: 1 / 1;
+        font-size: 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 20px;
+        background: var(--tile-light);
+        box-shadow: inset 2px 2px 5px #ccc, inset -2px -2px 5px #fff;
+        transition: transform 0.3s, background 0.3s;
+        cursor: pointer;
+        user-select: none;
+        width: 100%;
+      }
+
+      .tile:hover {
+        transform: scale(1.05);
+      }
+
+      body.dark .tile {
+        background: var(--tile-dark);
+        box-shadow: inset 2px 2px 5px #1a1a1a, inset -2px -2px 5px #2a2a2a;
+      }
+
+      .tile.X {
+        color: var(--x-color);
+        animation: pop 0.3s ease;
+      }
+
+      .tile.O {
+        color: var(--o-color);
+        animation: pop 0.3s ease;
+      }
+
+      @keyframes pop {
+        0% {
+          transform: scale(0);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .confetti {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 999;
+        display: none;
+      }
+
+      @media (max-width: 500px) {
+        html {
+          font-size: 14px;
+        }
+        .btn {
+          font-size: 0.9rem;
+        }
+        .tile {
+          font-size: 2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="controls">
+        <button id="modeToggle" class="btn">Play with Friend</button>
+        <div class="right-controls">
+          <button id="reset" class="btn" title="New Game">New Game</button>
+          <div id="themeToggle" class="icon-btn" title="Toggle Theme">
+            <i class="fas fa-sun"></i>
+          </div>
+        </div>
+      </div>
+      <div class="status" id="status">Current Turn: X</div>
+      <div class="score" id="score">X: 0 | O: 0</div>
+      <div class="board" id="board">
+        <div class="tile" data-index="0"></div>
+        <div class="tile" data-index="1"></div>
+        <div class="tile" data-index="2"></div>
+        <div class="tile" data-index="3"></div>
+        <div class="tile" data-index="4"></div>
+        <div class="tile" data-index="5"></div>
+        <div class="tile" data-index="6"></div>
+        <div class="tile" data-index="7"></div>
+        <div class="tile" data-index="8"></div>
+      </div>
+    </div>
+
+    <canvas id="confetti" class="confetti"></canvas>
+    <audio
+      id="clapSound"
+      src="https://www.soundjay.com/human/applause-01.mp3"
+    ></audio>
+
+    <script>
+      const board = document.getElementById("board");
+      const tiles = document.querySelectorAll(".tile");
+      const statusEl = document.getElementById("status");
+      const scoreEl = document.getElementById("score");
+      const resetBtn = document.getElementById("reset");
+      const themeToggle = document.getElementById("themeToggle");
+      const modeToggle = document.getElementById("modeToggle");
+      const confettiCanvas = document.getElementById("confetti");
+      const clapSound = document.getElementById("clapSound");
+
+      let currentPlayer = "X";
+      let boardState = Array(9).fill("");
+      let scores = { X: 0, O: 0 };
+      let vsAI = true;
+      let gameActive = true;
+
+      const winPatterns = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6],
+      ];
+
+      function renderBoard() {
+        tiles.forEach((tile, index) => {
+          tile.textContent = boardState[index];
+          tile.className = `tile ${boardState[index]}`;
+        });
+      }
+
+      function checkWinner() {
+        for (let pattern of winPatterns) {
+          const [a, b, c] = pattern;
+          if (
+            boardState[a] &&
+            boardState[a] === boardState[b] &&
+            boardState[b] === boardState[c]
+          ) {
+            [a, b, c].forEach((i) => tiles[i].classList.add("win"));
+            return boardState[a];
+          }
+        }
+        return boardState.includes("") ? null : "draw";
+      }
+
+      function updateStatus() {
+        const winner = checkWinner();
+        if (winner) {
+          gameActive = false;
+          resetBtn.textContent = "New Game";
+          if (winner === "draw") {
+            statusEl.textContent = "It's a draw!";
+          } else {
+            statusEl.textContent = `${winner} wins! 🎉`;
+            scores[winner]++;
+            showConfetti();
+            clapSound.play();
+          }
+          scoreEl.textContent = `X: ${scores.X} | O: ${scores.O}`;
+          return true;
+        }
+        statusEl.textContent = `Current Turn: ${currentPlayer}`;
+        return false;
+      }
+
+      function aiMove() {
+        let empty = boardState
+          .map((val, i) => (val === "" ? i : null))
+          .filter((v) => v !== null);
+        let random = empty[Math.floor(Math.random() * empty.length)];
+        if (random !== undefined) handleMove(random);
+      }
+
+      function handleMove(index) {
+        if (!gameActive || boardState[index] !== "") return;
+        boardState[index] = currentPlayer;
+        renderBoard();
+        if (updateStatus()) return;
+        currentPlayer = currentPlayer === "X" ? "O" : "X";
+        if (vsAI && currentPlayer === "O") setTimeout(aiMove, 500);
+      }
+
+      tiles.forEach((tile, i) =>
+        tile.addEventListener("click", () => handleMove(i))
+      );
+
+      resetBtn.addEventListener("click", () => {
+        boardState.fill("");
+        gameActive = true;
+        currentPlayer = "X";
+        renderBoard();
+        updateStatus();
+        resetBtn.textContent = "Reset";
+        confettiCanvas.style.display = "none";
+      });
+
+      themeToggle.addEventListener("click", () => {
+        document.body.classList.toggle("dark");
+        const icon = themeToggle.querySelector("i");
+        icon.classList.toggle("fa-sun");
+        icon.classList.toggle("fa-moon");
+      });
+
+      modeToggle.addEventListener("click", () => {
+        vsAI = !vsAI;
+        modeToggle.textContent = vsAI ? "Play with Friend" : "Play with AI";
+        resetBtn.click();
+      });
+
+      function showConfetti() {
+        confettiCanvas.style.display = "block";
+        const ctx = confettiCanvas.getContext("2d");
+        confettiCanvas.width = window.innerWidth;
+        confettiCanvas.height = window.innerHeight;
+
+        let particles = Array.from({ length: 150 }, () => ({
+          x: Math.random() * confettiCanvas.width,
+          y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+          size: Math.random() * 5 + 2,
+          speed: Math.random() * 3 + 2,
+          color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+        }));
+
+        function animate() {
+          ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+          particles.forEach((p) => {
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, p.y, p.size, p.size);
+            p.y += p.speed;
+            if (p.y > confettiCanvas.height) p.y = 0;
+          });
+          if (!gameActive) requestAnimationFrame(animate);
+        }
+
+        animate();
+      }
+
+      renderBoard();
+      updateStatus();
+    </script>
+  </body>
+</html>
